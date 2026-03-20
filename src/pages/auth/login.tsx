@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import router from 'next/router';
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState('');
@@ -15,7 +16,12 @@ export default function AdminLoginPage() {
         // Simulate login delay
         setTimeout(() => {
             setIsLoading(false);
+
+
+    
             // Logic for login would go here
+
+                router.push('/admin/dashboard');
         }, 1500);
     };
 
