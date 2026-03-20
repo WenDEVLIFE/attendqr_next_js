@@ -9,7 +9,10 @@ import {
     Landmark,
     PiggyBank,
     Bot,
-    Power
+    Power,
+    PersonStanding,
+    Logs,
+    Users
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -27,8 +30,8 @@ interface SidebarProps {
 
 const navItems: NavItem[] = [
     { icon: LayoutDashboard, label: 'Dashboard', index: 0 },
-    { icon: Wallet, label: 'Users', index: 1 },
-    { icon: Briefcase, label: 'Activity Logs', index: 2 },
+    { icon: Users, label: 'Users', index: 1 },
+    { icon: Logs, label: 'Activity Logs', index: 2 },
     { icon: Power, label: 'Logout', index: 3 },
 ];
 

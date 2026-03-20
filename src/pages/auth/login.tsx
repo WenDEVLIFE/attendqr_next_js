@@ -16,12 +16,9 @@ export default function AdminLoginPage() {
         // Simulate login delay
         setTimeout(() => {
             setIsLoading(false);
-
-
-    
             // Logic for login would go here
 
-                router.push('/admin/dashboard');
+                router.push('/admin/admin_dashboard');
         }, 1500);
     };
 
