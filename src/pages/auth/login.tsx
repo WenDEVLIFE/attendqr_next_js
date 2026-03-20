@@ -4,22 +4,84 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import router from 'next/router';
+import { supabase } from '@/src/lib/supabase/client';
+import { verifyPassword } from '@/src/lib/supabase/hash';
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
         setIsLoading(true);
-        // Simulate login delay
-        setTimeout(() => {
-            setIsLoading(false);
-            // Logic for login would go here
 
-                router.push('/admin/admin_dashboard');
-        }, 1500);
+        try {
+            console.log('[login] Attempting login for:', email.trim().toLowerCase());
+
+            // 1. Look up user by email in the custom users table
+            const { data: user, error: dbError } = await supabase
+                .from('users')
+                .select('id, username, email, role, password')
+                .eq('email', email.trim().toLowerCase())
+                .single();
+
+            if (dbError || !user) {
+                console.error('[login] User lookup failed or not found:');
+                if (dbError) console.error('[login] Database error:', dbError);
+                if (!user) console.error('[login] No user matches this email:', email.trim().toLowerCase());
+
+                setError('Invalid email or password.');
+                setIsLoading(false);
+                return;
+            }
+
+            console.log('[login] User found:', { id: user.id, email: user.email, role: user.role });
+            console.log('[login] Stored password string (prefix):', user.password ? user.password.substring(0, 10) + '...' : 'null');
+
+            // 2. Verify password against stored bcrypt hash
+            let passwordMatch = await verifyPassword(password, user.password);
+            console.log('[login] Bcrypt match result:', passwordMatch);
+
+            // Fallback: If bcrypt fails, check if it's stored plain (e.g. if trigger wasn't run yet)
+            if (!passwordMatch && password === user.password) {
+                console.warn('[login] Plain-text password fallback used!');
+                passwordMatch = true;
+            }
+
+            if (!passwordMatch) {
+                console.error('[login] Password verification failed.');
+                setError('Invalid email or password.');
+                setIsLoading(false);
+                return;
+            }
+
+            // 3. Check the user has admin role
+            if (user.role !== 'admin') {
+                console.error('[login] Role mismatch. Expected admin, got:', user.role);
+                setError('Access denied. You do not have admin privileges.');
+                setIsLoading(false);
+                return;
+            }
+
+            console.log('[login] Login successful! Redirecting...');
+
+            // 4. Store session info and redirect
+            localStorage.setItem('admin_user', JSON.stringify({
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+            }));
+
+            router.push('/admin/admin_dashboard');
+        } catch (err) {
+            console.error('[login] Unexpected error:', err);
+            setError('An unexpected error occurred. Please try again.');
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -78,6 +140,16 @@ export default function AdminLoginPage() {
                                 </label>
                             </div>
                         </div>
+
+                        {/* Inline error message */}
+                        {error && (
+                            <div className="rounded-xl bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400 flex items-center gap-2">
+                                <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {error}
+                            </div>
+                        )}
 
                         <Link
                             href="/admin/forgot_password"
