@@ -89,14 +89,14 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onU
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-zinc-400">Username</label>
                                     <div className="relative group">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-blue-400 transition-colors" />
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-emerald-400 transition-colors" />
                                         <input
                                             required
                                             type="text"
                                             placeholder="johndoe"
                                             value={formData.username}
                                             onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm text-white focus:bg-white/10 focus:border-blue-500/50 transition-all placeholder:text-zinc-600"
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm text-white focus:bg-white/10 focus:border-emerald-500/50 transition-all placeholder:text-zinc-600"
                                         />
                                     </div>
                                 </div>
@@ -105,14 +105,14 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onU
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-zinc-400">Email Address</label>
                                     <div className="relative group">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-blue-400 transition-colors" />
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-emerald-400 transition-colors" />
                                         <input
                                             required
                                             type="email"
                                             placeholder="john@example.com"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm text-white focus:bg-white/10 focus:border-blue-500/50 transition-all placeholder:text-zinc-600"
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm text-white focus:bg-white/10 focus:border-emerald-500/50 transition-all placeholder:text-zinc-600"
                                         />
                                     </div>
                                 </div>
@@ -121,14 +121,14 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onU
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-zinc-400">Password</label>
                                     <div className="relative group">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-blue-400 transition-colors" />
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-emerald-400 transition-colors" />
                                         <input
                                             required
                                             type="password"
                                             placeholder="••••••••"
                                             value={formData.password}
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm text-white focus:bg-white/10 focus:border-blue-500/50 transition-all placeholder:text-zinc-600"
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm text-white focus:bg-white/10 focus:border-emerald-500/50 transition-all placeholder:text-zinc-600"
                                         />
                                     </div>
                                 </div>
@@ -137,11 +137,11 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onU
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-zinc-400">Role</label>
                                     <div className="relative group">
-                                        <Shield className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-blue-400 transition-colors" />
+                                        <Shield className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-emerald-400 transition-colors" />
                                         <select
                                             value={formData.role}
                                             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm text-white focus:bg-white/10 focus:border-blue-500/50 transition-all appearance-none cursor-pointer"
+                                            className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm text-white focus:bg-white/10 focus:border-emerald-500/50 transition-all appearance-none cursor-pointer"
                                         >
                                             <option value="user" className="bg-zinc-900">User</option>
                                             <option value="admin" className="bg-zinc-900">Admin</option>
@@ -164,7 +164,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose, onU
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 text-white px-6 py-4 rounded-2xl font-semibold text-sm transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2"
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:hover:bg-emerald-600 text-white px-6 py-4 rounded-2xl font-semibold text-sm transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
                                 >
                                     {loading ? (
                                         <Loader2 className="h-4 w-4 animate-spin" />

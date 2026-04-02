@@ -43,7 +43,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentIndex
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+                    <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
                     <p className="text-zinc-500 font-medium">Verifying session...</p>
                 </div>
             </div>
@@ -60,7 +60,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentIndex
             <Sidebar currentIndex={currentIndex} onTap={handleNavigation} />
             
             {/* Main Content Area */}
-            <main className="flex-1 ml-72 p-8 min-h-screen overflow-y-auto bg-black bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]">
+            <main className="flex-1 ml-72 p-8 min-h-screen overflow-y-auto bg-black bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(16,185,129,0.1),rgba(255,255,255,0))]">
                 {children}
             </main>
         </div>
