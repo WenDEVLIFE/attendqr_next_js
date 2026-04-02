@@ -32,12 +32,19 @@ CREATE TRIGGER hash_password
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
--- This policy allows anyone (even logged out users) to LOOK UP an account by email.
+-- This policy allows anyone (even logged out users) to LOOK UP an account by email/username.
 -- Required for the custom login screen to find the password hash.
 DROP POLICY IF EXISTS "Allow public email lookup" ON users;
 CREATE POLICY "Allow public email lookup" ON users
   FOR SELECT TO anon
   USING (true);
+
+-- This policy allows anyone to SIGN UP (insert a new user).
+-- Combined with our service logic (checkUserExists), this enables secure registration.
+DROP POLICY IF EXISTS "Allow public registration" ON users;
+CREATE POLICY "Allow public registration" ON users
+  FOR INSERT TO anon
+  WITH CHECK (true);
 
 -- ============================================================
 -- Verification query (run after seeding a user):
