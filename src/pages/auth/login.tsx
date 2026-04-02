@@ -53,6 +53,18 @@ export default function AdminLoginPage() {
             }
 
             if (!passwordMatch) {
+                // Log failed attempt for existing user
+                try {
+                    const { logActivity } = await import('@/src/services/activity_service');
+                    await logActivity({
+                        user_id: user.id,
+                        activity_type: 'login_failure',
+                        description: `Failed login attempt for ${user.username}`,
+                    });
+                } catch (e) {
+                    console.error('Failed to log login_failure:', e);
+                }
+
                 setError('Invalid email or password.');
                 setIsLoading(false);
                 return;
@@ -60,12 +72,36 @@ export default function AdminLoginPage() {
 
             // 3. Check the user has admin role
             if (user.role !== 'admin') {
+                // Log unauthorized access attempt
+                try {
+                    const { logActivity } = await import('@/src/services/activity_service');
+                    await logActivity({
+                        user_id: user.id,
+                        activity_type: 'login_unauthorized',
+                        description: `Unauthorized admin access attempt by ${user.username}`,
+                    });
+                } catch (e) {
+                    console.error('Failed to log login_unauthorized:', e);
+                }
+
                 setError('Access denied. You do not have admin privileges.');
                 setIsLoading(false);
                 return;
             }
 
             console.log('[login] Login successful! Redirecting...');
+
+            // Log successful login
+            try {
+                const { logActivity } = await import('@/src/services/activity_service');
+                await logActivity({
+                    user_id: user.id,
+                    activity_type: 'user_login',
+                    description: `Admin ${user.username} logged in successfully`,
+                });
+            } catch (e) {
+                console.error('Failed to log user_login:', e);
+            }
 
             // 4. Use central login function from useAuth hook
             login({

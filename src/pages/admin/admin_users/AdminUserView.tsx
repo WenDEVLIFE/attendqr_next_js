@@ -1,10 +1,103 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { AdminLayout } from '../../../components/AdminLayout';
 import { Search, MoreVertical, Edit2, Trash2, Loader2, UserPlus } from 'lucide-react';
 import { getUsers, UserData } from '@/src/services/user_service';
 import { AddUserModal } from '@/src/components/AddUserModal';
 import { EditUserModal } from '@/src/components/EditUserModal';
 import { DeleteUserModal } from '@/src/components/DeleteUserModal';
+
+interface UserActionsMenuProps {
+    user: UserData;
+    isOpen: boolean;
+    onToggle: () => void;
+    onEdit: (user: UserData) => void;
+    onDelete: (user: UserData) => void;
+}
+
+function UserActionsMenu({ user, isOpen, onToggle, onEdit, onDelete }: UserActionsMenuProps) {
+    const menuRef = useRef<HTMLDivElement>(null);
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({});
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const updatePosition = () => {
+            if (!buttonRef.current) return;
+
+            const rect = buttonRef.current.getBoundingClientRect();
+            setMenuStyle({
+                position: 'fixed',
+                top: rect.bottom + 8,
+                left: Math.max(12, rect.right - 160),
+                width: 160,
+                zIndex: 9999,
+            });
+        };
+
+        updatePosition();
+
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                onToggle();
+            }
+        };
+
+        const handleWindowChange = () => {
+            onToggle();
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        window.addEventListener('scroll', handleWindowChange, true);
+        window.addEventListener('resize', handleWindowChange);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            window.removeEventListener('scroll', handleWindowChange, true);
+            window.removeEventListener('resize', handleWindowChange);
+        };
+    }, [isOpen, onToggle]);
+
+    const menu = isOpen ? createPortal(
+        <div ref={menuRef} style={menuStyle}>
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200">
+                <button
+                    type="button"
+                    onClick={() => onEdit(user)}
+                    className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-blue-500/20 text-zinc-300 hover:text-blue-400 transition-colors border-b border-white/5 text-sm"
+                >
+                    <Edit2 className="w-4 h-4" />
+                    Edit User
+                </button>
+                <button
+                    type="button"
+                    onClick={() => onDelete(user)}
+                    className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-rose-500/20 text-zinc-300 hover:text-rose-400 transition-colors text-sm"
+                >
+                    <Trash2 className="w-4 h-4" />
+                    Delete User
+                </button>
+            </div>
+        </div>,
+        document.body
+    ) : null;
+
+    return (
+        <div className="relative">
+            <button
+                type="button"
+                onClick={onToggle}
+                ref={buttonRef}
+                className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
+            >
+                <MoreVertical className="w-4 h-4" />
+            </button>
+
+            {menu}
+        </div>
+    );
+}
 
 export default function AdminUsers() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -19,7 +112,6 @@ export default function AdminUsers() {
     // Selection state
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
-    const menuRef = useRef<HTMLDivElement>(null);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -35,17 +127,6 @@ export default function AdminUsers() {
 
     useEffect(() => {
         fetchUsers();
-    }, []);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setOpenMenuId(null);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const handleMenuClick = (userId: number | undefined) => {
@@ -73,16 +154,6 @@ export default function AdminUsers() {
     const formatDate = (dateString?: string) => {
         if (!dateString) return '---';
         return new Date(dateString).toLocaleDateString();
-    };
-
-    const handleEditClick = (user: UserData) => {
-        setSelectedUser(user);
-        setIsEditModalOpen(true);
-    };
-
-    const handleDeleteClick = (user: UserData) => {
-        setSelectedUser(user);
-        setIsDeleteModalOpen(true);
     };
 
     return (
@@ -166,34 +237,13 @@ export default function AdminUsers() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="relative" ref={menuRef}>
-                                                <button
-                                                    onClick={() => handleMenuClick(user.id)}
-                                                    className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
-                                                >
-                                                    <MoreVertical className="w-4 h-4" />
-                                                </button>
-
-                                                {/* Dropdown Menu */}
-                                                {openMenuId === user.id && (
-                                                    <div className="absolute right-0 mt-1 w-40 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-200">
-                                                        <button
-                                                            onClick={() => handleMenuEdit(user)}
-                                                            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-blue-500/20 text-zinc-300 hover:text-blue-400 transition-colors border-b border-white/5 text-sm"
-                                                        >
-                                                            <Edit2 className="w-4 h-4" />
-                                                            Edit User
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleMenuDelete(user)}
-                                                            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-rose-500/20 text-zinc-300 hover:text-rose-400 transition-colors text-sm"
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                            Delete User
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
+                                            <UserActionsMenu
+                                                user={user}
+                                                isOpen={openMenuId === user.id}
+                                                onToggle={() => handleMenuClick(user.id)}
+                                                onEdit={handleMenuEdit}
+                                                onDelete={handleMenuDelete}
+                                            />
                                         </td>
                                     </tr>
                                 ))}

@@ -54,3 +54,21 @@ export async function getUserActivities(userId: number, limit: number = 10) {
     return data;
 }   
 
+/** * Retrieves the most recent activities across the entire system.
+ * @param limit - The maximum number of activities to retrieve (default is 50).
+ * @returns An array of activity data with joined username or an error.
+ */
+export async function getRecentActivitiesWithUsers(limit: number = 50) {
+    const { data, error } = await supabase
+    .from("activities")
+    .select("id, user_id, activity_type, description, created_at, users(username)")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+    if (error) {
+    console.error("Error retrieving system activities:", error.message);
+    throw new Error("Failed to retrieve system activities.");
+    }
+
+    return data;
+}   
