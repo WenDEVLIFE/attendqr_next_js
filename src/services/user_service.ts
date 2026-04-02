@@ -1,4 +1,5 @@
 import { supabase } from "@/src/lib/supabase/client";
+import { logActivity } from "./activity.service";
 
 export interface UserData {
   id?: number;
@@ -60,6 +61,20 @@ export async function createUser(userData: UserData) {
   if (error) {
     console.error("Error creating user:", error.message);
     throw new Error(error.message);
+  }
+
+  // this will check if the user was created successfully and log the activity, but it won't fail the user creation if the activity logging fails. 
+  if (data?.id) {
+    try {
+      await logActivity({
+        user_id: data.id,
+        activity_type: "user_created",
+        description: `User account created for ${data.username}`,
+      });
+    } catch (activityError) {
+      // Do not fail user creation if activity logging fails.
+      console.error("Activity logging failed after user creation:", activityError);
+    }
   }
 
   return data;
