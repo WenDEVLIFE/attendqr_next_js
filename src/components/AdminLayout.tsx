@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Sidebar from './sidebar';
+import { useAuth } from '@/src/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 
 interface AdminLayoutProps {
     children: React.ReactNode;
@@ -8,7 +10,14 @@ interface AdminLayoutProps {
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentIndex }) => {
+    const { isAuthenticated, isLoading, logout } = useAuth();
     const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading && !isAuthenticated) {
+            router.push('/auth/login');
+        }
+    }, [isLoading, isAuthenticated, router]);
 
     const handleNavigation = (index: number) => {
         switch (index) {
@@ -22,13 +31,28 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, currentIndex
                 router.push('/admin/admin_activity_logs');
                 break;
             case 3:
-                // Handle logout
-                router.push('/auth/login');
+                // Handle logout through the hook
+                logout();
                 break;
             default:
                 break;
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+                    <p className="text-zinc-500 font-medium">Verifying session...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) {
+        return null; // Will redirect via useEffect
+    }
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white font-sans flex">
