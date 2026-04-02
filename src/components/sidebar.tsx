@@ -2,15 +2,10 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useAuth } from '../hooks/useAuth';
 import {
     LayoutDashboard,
-    Wallet,
-    Briefcase,
-    Landmark,
-    PiggyBank,
-    Bot,
     Power,
-    PersonStanding,
     Logs,
     Users
 } from 'lucide-react';
@@ -40,6 +35,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onTap,
     className = '',
 }) => {
+    const { user, isLoading } = useAuth();
+    const displayName = user?.username || 'Admin User';
+    const displayEmail = user?.email || 'admin@example.com';
+    const initials = displayName
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part[0]?.toUpperCase() || '')
+        .join('') || 'AU';
+
     return (
         <aside className={`fixed top-0 left-0 bottom-0 w-72 bg-background border-r border-zinc-200 dark:border-zinc-800 flex flex-col z-50 transition-colors duration-500 ${className}`}>
             {/* Logo Section */}
@@ -111,11 +116,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="p-6 border-t border-zinc-100 dark:border-zinc-900">
                 <div className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800">
                     <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 font-bold">
-                        JD
+                        {initials}
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold truncate">John Doe</p>
-                        <p className="text-[10px] text-zinc-500 truncate lowercase">john@wenlance.com</p>
+                        <p className="text-sm font-bold truncate">{isLoading ? 'Loading...' : displayName}</p>
+                        <p className="text-[10px] text-zinc-500 truncate lowercase">{displayEmail}</p>
                     </div>
                 </div>
             </div>
