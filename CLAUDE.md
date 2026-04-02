@@ -1,6 +1,11 @@
 @AGENTS.md
 
 # CLAUDE.md
+# This tells Claude Code how to behave in this project
+
+## Writing Files
+- Files should be saved automatically when I say "write <filename>"
+- File paths are relative to the project root
 
 ## Commands
 - Build: <your build command>
