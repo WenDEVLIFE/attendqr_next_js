@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AttendQR Next.js
 
-## Getting Started
+A premium, modern attendance management system built with Next.js 16.2.0 and Supabase. This project features a high-fidelity dark UI with glassmorphism and smooth animations.
 
-First, run the development server:
+## 🚀 Tech Stack
+
+- **Framework**: [Next.js 16.2.0](https://nextjs.org/) (Custom build)
+- **Database & Auth**: [Supabase](https://supabase.com/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Security**: [BcryptJS](https://github.com/dcodeIO/bcrypt.js)
+
+## 📁 Project Structure
+
+The project follows a modular architecture within the `src` directory:
+
+- **`src/app`**: Root layouts, global styles, and initial routing logic (e.g., redirects).
+- **`src/pages`**: Main application views (Admin Dashboard, Auth pages). Uses the Pages Router for view-specific logic.
+- **`src/components`**: Reusable UI components (Layouts, Sidebars, Custom Buttons).
+- **`src/hooks`**: Custom React hooks for shared state and side effects.
+- **`src/services`**: Business logic and data fetching wrappers.
+- **`src/lib`**: External library initializations (e.g., Supabase client).
+- **`src/utils`**: Pure helper functions and constants.
+- **`src/assets`**: Static assets like icons and images.
+
+## 🛠️ Development
+
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🎨 Design Principles
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Glassmorphism**: Use `backdrop-blur-xl` and `bg-white/5` for a premium look.
+- **Gradients**: Subtle white-to-transparent or colored gradients for depth.
+- **Modern Typography**: Clean, high-contrast headings using Geist/Inter.
+- **Smooth Transitions**: Integrated `animate-in` and Framer Motion for page entry.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For AI Agents: Refer to `AGENTS.md` for specific coding conventions and directory rules.
