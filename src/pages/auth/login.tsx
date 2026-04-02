@@ -57,7 +57,6 @@ export default function AdminLoginPage() {
                 try {
                     const { logActivity } = await import('@/src/services/activity_service');
                     await logActivity({
-                        user_id: user.id,
                         activity_type: 'login_failure',
                         description: `Failed login attempt for ${user.username}`,
                     });
@@ -76,7 +75,7 @@ export default function AdminLoginPage() {
                 try {
                     const { logActivity } = await import('@/src/services/activity_service');
                     await logActivity({
-                        user_id: user.id,
+                    
                         activity_type: 'login_unauthorized',
                         description: `Unauthorized admin access attempt by ${user.username}`,
                     });
@@ -95,7 +94,7 @@ export default function AdminLoginPage() {
             try {
                 const { logActivity } = await import('@/src/services/activity_service');
                 await logActivity({
-                    user_id: user.id,
+                
                     activity_type: 'user_login',
                     description: `Admin ${user.username} logged in successfully`,
                 });
