@@ -1,22 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminLayout } from '../../../components/AdminLayout';
-import { Search, MoreVertical, Edit2, Trash2 } from 'lucide-react';
-
-const MOCK_USERS = [
-    { id: 1, name: 'Alice Cooper', email: 'alice@example.com', role: 'Staff', status: 'Active', date: '2026-03-19' },
-    { id: 2, name: 'Bob Smith', email: 'bob@example.com', role: 'Student', status: 'Inactive', date: '2026-03-18' },
-    { id: 3, name: 'Charlie Davis', email: 'charlie@example.com', role: 'Staff', status: 'Active', date: '2026-03-17' },
-    { id: 4, name: 'Diana Prince', email: 'diana@example.com', role: 'Admin', status: 'Active', date: '2026-03-16' },
-    { id: 5, name: 'Evan Edwards', email: 'evan@example.com', role: 'Student', status: 'Active', date: '2026-03-15' },
-];
+import { Search, MoreVertical, Edit2, Trash2, Loader2, UserPlus } from 'lucide-react';
+import { getUsers, UserData } from '@/src/services/user_service';
+import { AddUserModal } from '@/src/components/AddUserModal';
 
 export default function AdminUsers() {
     const [searchTerm, setSearchTerm] = useState('');
+    const [users, setUsers] = useState<UserData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const filteredUsers = MOCK_USERS.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const fetchUsers = async () => {
+        setLoading(true);
+        try {
+            const data = await getUsers();
+            setUsers(data);
+        } catch (error) {
+            console.error('Failed to fetch users:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const filteredUsers = users.filter(user =>
+        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return '---';
+        return new Date(dateString).toLocaleDateString();
+    };
 
     return (
         <AdminLayout currentIndex={1}>
@@ -41,19 +59,23 @@ export default function AdminUsers() {
                                 className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm focus:bg-white/10 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-zinc-500"
                             />
                         </div>
-                        <button className="whitespace-nowrap bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-2xl font-semibold text-sm transition-colors shadow-lg shadow-blue-500/20">
+                        <button 
+                            onClick={() => setIsModalOpen(true)}
+                            className="whitespace-nowrap bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-2xl font-semibold text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                        >
+                            <UserPlus className="w-4 h-4" />
                             Add User
                         </button>
                     </div>
                 </header>
 
                 {/* Users Table Card */}
-                <div className="rounded-3xl bg-[#0a0a0a]/80 border border-white/10 overflow-hidden backdrop-blur-xl shadow-2xl">
+                <div className="rounded-3xl bg-[#0a0a0a]/80 border border-white/10 overflow-hidden backdrop-blur-xl shadow-2xl min-h-[400px]">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-zinc-400 font-semibold">
-                                    <th className="px-6 py-4">Name</th>
+                                    <th className="px-6 py-4">User</th>
                                     <th className="px-6 py-4 hidden sm:table-cell">Role</th>
                                     <th className="px-6 py-4 hidden md:table-cell">Joined</th>
                                     <th className="px-6 py-4">Status</th>
@@ -61,31 +83,37 @@ export default function AdminUsers() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {filteredUsers.map((user) => (
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-20 text-center">
+                                            <div className="flex flex-col items-center gap-3">
+                                                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                                                <p className="text-zinc-500 text-sm">Fetching users...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : filteredUsers.map((user) => (
                                     <tr key={user.id} className="hover:bg-white/5 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center text-blue-400 font-bold text-sm border border-blue-500/20">
-                                                    {user.name.charAt(0)}
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center text-blue-400 font-bold text-sm border border-blue-500/20 uppercase">
+                                                    {user.username.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <p className="font-semibold text-white/90 group-hover:text-white transition-colors">{user.name}</p>
+                                                    <p className="font-semibold text-white/90 group-hover:text-white transition-colors">{user.username}</p>
                                                     <p className="text-xs text-zinc-500">{user.email}</p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 hidden sm:table-cell">
-                                            <span className="text-sm text-zinc-300">{user.role}</span>
+                                            <span className="text-sm text-zinc-300 capitalize">{user.role}</span>
                                         </td>
                                         <td className="px-6 py-4 hidden md:table-cell">
-                                            <span className="text-sm text-zinc-400">{user.date}</span>
+                                            <span className="text-sm text-zinc-400">{formatDate(user.created_at)}</span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${user.status === 'Active'
-                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                    : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                                                }`}>
-                                                {user.status}
+                                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                                                Active
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
@@ -103,10 +131,10 @@ export default function AdminUsers() {
                                         </td>
                                     </tr>
                                 ))}
-                                {filteredUsers.length === 0 && (
+                                {!loading && filteredUsers.length === 0 && (
                                     <tr>
                                         <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
-                                            No users found matching "{searchTerm}"
+                                            {searchTerm ? `No users found matching "${searchTerm}"` : 'No users registered yet.'}
                                         </td>
                                     </tr>
                                 )}
@@ -115,6 +143,12 @@ export default function AdminUsers() {
                     </div>
                 </div>
             </div>
+
+            <AddUserModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onUserAdded={fetchUsers}
+            />
         </AdminLayout>
     );
 }
