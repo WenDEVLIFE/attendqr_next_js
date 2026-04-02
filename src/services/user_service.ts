@@ -81,6 +81,84 @@ export async function createUser(userData: UserData) {
 }
 
 /**
+ * Updates an existing user record.
+ * @param id - The ID of the user to update.
+ * @param userData - The new data to apply.
+ * @returns The updated user record.
+ */
+export async function updateUser(id: number, userData: Partial<UserData>) {
+  const updatePayload: any = {
+    username: userData.username,
+    email: userData.email,
+    role: userData.role,
+  };
+
+  // Only include password if it was provided
+  if (userData.password) {
+    updatePayload.password = userData.password;
+  }
+
+  const { data, error } = await supabase
+    .from("users")
+    .update(updatePayload)
+    .eq("id", id)
+    .select("id, username, email, role, created_at")
+    .single();
+
+  if (error) {
+    console.error("Error updating user:", error.message);
+    throw new Error(error.message);
+  }
+
+  if (data?.id) {
+    try {
+      await logActivity({
+        user_id: data.id,
+        activity_type: "user_updated",
+        description: `User ${data.username} updated by admin`,
+      });
+    } catch (activityError) {
+      console.error("Activity logging failed after user update:", activityError);
+    }
+  }
+
+  return data;
+}
+
+/**
+ * Permanently deletes a user record.
+ * @param id - The ID of the user to delete.
+ */
+export async function deleteUser(id: number) {
+  // Fetch user info for logging before deletion
+  const { data: user } = await supabase
+    .from("users")
+    .select("username")
+    .eq("id", id)
+    .single();
+
+  const { error } = await supabase.from("users").delete().eq("id", id);
+
+  if (error) {
+    console.error("Error deleting user:", error.message);
+    throw new Error(error.message);
+  }
+
+  if (user) {
+    try {
+      // Log deletion activity (with no user_id or a system marker if needed)
+      await logActivity({
+        user_id: id,
+        activity_type: "user_deleted",
+        description: `User ${user.username} (ID: ${id}) was deleted`,
+      });
+    } catch (activityError) {
+      console.error("Activity logging failed after user deletion:", activityError);
+    }
+  }
+}
+
+/**
  * Fetches all users from the 'users' table.
  * @returns A list of users.
  */

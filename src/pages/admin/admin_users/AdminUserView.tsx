@@ -3,12 +3,21 @@ import { AdminLayout } from '../../../components/AdminLayout';
 import { Search, MoreVertical, Edit2, Trash2, Loader2, UserPlus } from 'lucide-react';
 import { getUsers, UserData } from '@/src/services/user_service';
 import { AddUserModal } from '@/src/components/AddUserModal';
+import { EditUserModal } from '@/src/components/EditUserModal';
+import { DeleteUserModal } from '@/src/components/DeleteUserModal';
 
 export default function AdminUsers() {
     const [searchTerm, setSearchTerm] = useState('');
     const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    // Modal States
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    
+    // Selection state
+    const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -36,6 +45,16 @@ export default function AdminUsers() {
         return new Date(dateString).toLocaleDateString();
     };
 
+    const handleEditClick = (user: UserData) => {
+        setSelectedUser(user);
+        setIsEditModalOpen(true);
+    };
+
+    const handleDeleteClick = (user: UserData) => {
+        setSelectedUser(user);
+        setIsDeleteModalOpen(true);
+    };
+
     return (
         <AdminLayout currentIndex={1}>
             <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -60,7 +79,7 @@ export default function AdminUsers() {
                             />
                         </div>
                         <button 
-                            onClick={() => setIsModalOpen(true)}
+                            onClick={() => setIsAddModalOpen(true)}
                             className="whitespace-nowrap bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-2xl font-semibold text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
                         >
                             <UserPlus className="w-4 h-4" />
@@ -118,10 +137,16 @@ export default function AdminUsers() {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                <button className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-blue-400 transition-colors">
+                                                <button
+                                                    onClick={() => handleEditClick(user)}
+                                                    className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-blue-400 transition-colors"
+                                                >
                                                     <Edit2 className="w-4 h-4" />
                                                 </button>
-                                                <button className="p-2 hover:bg-rose-500/20 rounded-lg text-zinc-400 hover:text-rose-400 transition-colors">
+                                                <button 
+                                                    onClick={() => handleDeleteClick(user)}
+                                                    className="p-2 hover:bg-rose-500/20 rounded-lg text-zinc-400 hover:text-rose-400 transition-colors"
+                                                >
                                                     <Trash2 className="w-4 h-4" />
                                                 </button>
                                                 <button className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors">
@@ -144,10 +169,31 @@ export default function AdminUsers() {
                 </div>
             </div>
 
+            {/* Modals */}
             <AddUserModal 
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                isOpen={isAddModalOpen}
+                onClose={() => setIsAddModalOpen(false)}
                 onUserAdded={fetchUsers}
+            />
+            
+            <EditUserModal
+                isOpen={isEditModalOpen}
+                onClose={() => {
+                    setIsEditModalOpen(false);
+                    setSelectedUser(null);
+                }}
+                onUserUpdated={fetchUsers}
+                user={selectedUser}
+            />
+
+            <DeleteUserModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => {
+                    setIsDeleteModalOpen(false);
+                    setSelectedUser(null);
+                }}
+                onUserDeleted={fetchUsers}
+                user={selectedUser}
             />
         </AdminLayout>
     );
