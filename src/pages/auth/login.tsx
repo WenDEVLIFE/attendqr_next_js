@@ -121,7 +121,7 @@ export default function AdminLoginPage() {
     if (isAuthLoading || isAuthenticated) {
         return (
             <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+                <div className="animate-spin h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
             </div>
         );
     }
@@ -144,7 +144,17 @@ export default function AdminLoginPage() {
             <div className="relative z-10 w-full max-w-md px-6">
                 <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl p-8 shadow-2xl transition-all duration-500 hover:shadow-indigo-500/20">
                     <div className="text-center mb-10">
-                        <h1 className="text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+                        <div className="relative w-20 h-20 mx-auto mb-6">
+                            <Image
+                                src="/assets/logo.png"
+                                alt="AttendQR Logo"
+                                fill
+                                sizes="80px"
+                                className="object-contain rounded-2xl shadow-2xl shadow-emerald-500/20"
+                                priority
+                            />
+                        </div>
+                        <h1 className="text-4xl font-bold tracking-tight mb-2 bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
                             AttendQR Admin
                         </h1>
                         <p className="text-white/50 font-medium">Welcome back, please login to continue.</p>

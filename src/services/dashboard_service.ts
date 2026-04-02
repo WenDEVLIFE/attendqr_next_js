@@ -26,7 +26,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // 2. Active Scans Today
   const { count: scansToday, error: scansError } = await supabase
-    .from("activities")
+    .from("activity_logs")
     .select("*", { count: "exact", head: true })
     .eq("activity_type", "scan")
     .gte("created_at", todayISO);
@@ -37,7 +37,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // 3. Successful Logins Today
   const { count: loginsToday, error: loginsError } = await supabase
-    .from("activities")
+    .from("activity_logs")
     .select("*", { count: "exact", head: true })
     .eq("activity_type", "user_login")
     .gte("created_at", todayISO);
@@ -48,7 +48,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
   // 4. Failed Attempts Today
   const { count: failedToday, error: failedError } = await supabase
-    .from("activities")
+    .from("activity_logs")
     .select("*", { count: "exact", head: true })
     .eq("activity_type", "login_failed")
     .gte("created_at", todayISO);
@@ -71,8 +71,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
  */
 export async function getRecentDashboardActivities(limit: number = 5) {
   const { data, error } = await supabase
-    .from("activities")
-    .select("id, activity_type, description, created_at, users(username)")
+    .from("activity_logs")
+    .select("report_id, activity_type, description, created_at")
     .order("created_at", { ascending: false })
     .limit(limit);
 

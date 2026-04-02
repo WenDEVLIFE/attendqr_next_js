@@ -1,74 +1,96 @@
 import { supabase } from "@/src/lib/supabase/client";
 
+let activitySequence = 0;
+
 export interface ActivityData {
-    id?: number;
-    user_id: number;
+    report_id?: number;
     activity_type: string;
     description: string;
     created_at?: string;
-    }
+}
 
 /** * Logs a user activity in the Supabase 'activities' table.
  * @param activityData - The activity information to insert.
  * @returns An object containing the created activity data or an error.
  */
 export async function logActivity(activityData: ActivityData) {
-    const { data, error } = await supabase
-    .from("activities")
-    .insert([
-        {
-        user_id: activityData.user_id,
-        activity_type: activityData.activity_type,
-        description: activityData.description,
-        },
-    ])
-    .select("id, user_id, activity_type, description, created_at")
-    .single();
+    const generatedReportId = activityData.report_id ?? (Date.now() * 1000 + (activitySequence++ % 1000));
 
-    if (error) {
-    console.error("Error logging activity:", error.message);
-    throw new Error("Failed to log activity.");
+    const response = await fetch('/api/admin/log-activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            report_id: generatedReportId,
+            activity_type: activityData.activity_type,
+            description: activityData.description,
+        }),
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    const payload = contentType.includes('application/json')
+        ? await response.json()
+        : { success: false, error: await response.text() };
+
+    if (!response.ok || !payload.success) {
+        const errorMessage = payload?.error || 'Failed to log activity.';
+        if (String(errorMessage).includes('Missing Supabase server environment variables')) {
+            console.warn('Activity logging skipped:', errorMessage);
+            return null;
+        }
+
+        console.error('Error logging activity:', errorMessage);
+        throw new Error(errorMessage);
     }
 
-    return data;
-}   
+    return payload.activity;
+}
 
-/** * Retrieves recent activities for a specific user.
- * @param userId - The ID of the user whose activities to retrieve.
+/** * Retrieves recent activities for a specific report.
+ * @param reportId - The ID of the report whose activities to retrieve.
  * @param limit - The maximum number of activities to retrieve (default is 10).
  * @returns An array of activity data or an error.
  */
-export async function getUserActivities(userId: number, limit: number = 10) {
+export async function getUserActivities(reportId: number, limit: number = 10) {
     const { data, error } = await supabase
-    .from("activities")
-    .select("id, user_id, activity_type, description, created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
+        .from("activity_logs")
+        .select("report_id, activity_type, description, created_at")
+        .eq("report_id", reportId)
+        .order("created_at", { ascending: false })
+        .limit(limit);
 
     if (error) {
-    console.error("Error retrieving user activities:", error.message);
-    throw new Error("Failed to retrieve user activities.");
+        console.error("Error retrieving user activities:", error.message);
+        throw new Error("Failed to retrieve user activities.");
     }
 
     return data;
-}   
+}
 
 /** * Retrieves the most recent activities across the entire system.
  * @param limit - The maximum number of activities to retrieve (default is 50).
- * @returns An array of activity data with joined username or an error.
+ * @returns An array of activity data or an error.
  */
 export async function getRecentActivitiesWithUsers(limit: number = 50) {
-    const { data, error } = await supabase
-    .from("activities")
-    .select("id, user_id, activity_type, description, created_at, users(username)")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+    try {
+        const response = await fetch(`/api/admin/get-activities?limit=${limit}`);
+        
+        const contentType = response.headers.get('content-type') || '';
+        const payload = contentType.includes('application/json')
+            ? await response.json()
+            : { success: false, error: await response.text() };
 
-    if (error) {
-    console.error("Error retrieving system activities:", error.message);
-    throw new Error("Failed to retrieve system activities.");
+        console.log('Activity API Response:', { status: response.status, payload });
+
+        if (!response.ok || !payload.success) {
+            const errorMessage = payload?.error || 'Failed to fetch activities.';
+            console.error('Error retrieving system activities:', errorMessage);
+            throw new Error(errorMessage);
+        }
+
+        return payload.activities || [];
+    } catch (error: any) {
+        console.error("Error retrieving system activities - Full error:", error);
+        console.error("Error message:", error.message);
+        throw error;
     }
-
-    return data;
 }   

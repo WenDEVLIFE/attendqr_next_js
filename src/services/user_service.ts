@@ -45,7 +45,7 @@ export async function createUser(userData: UserData) {
   }
 
   // 2. Insert new user
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("users")
     .insert([
       {
@@ -58,6 +58,33 @@ export async function createUser(userData: UserData) {
     .select("id, username, email, role, created_at")
     .single();
 
+  if (error && error.message.toLowerCase().includes("row-level security")) {
+    const response = await fetch('/api/admin/create-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+        role: userData.role || 'user',
+      }),
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    const payload = contentType.includes('application/json')
+      ? await response.json()
+      : { success: false, error: await response.text() };
+
+    if (!response.ok || !payload.success) {
+      const fallbackMessage = payload?.error || error.message;
+      console.error("Error creating user via fallback API:", fallbackMessage);
+      throw new Error(fallbackMessage);
+    }
+
+    data = payload.user;
+    error = null;
+  }
+
   if (error) {
     console.error("Error creating user:", error.message);
     throw new Error(error.message);
@@ -67,7 +94,6 @@ export async function createUser(userData: UserData) {
   if (data?.id) {
     try {
       await logActivity({
-        user_id: data.id,
         activity_type: "user_created",
         description: `User account created for ${data.username}`,
       });
@@ -98,12 +124,37 @@ export async function updateUser(id: number, userData: Partial<UserData>) {
     updatePayload.password = userData.password;
   }
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("users")
     .update(updatePayload)
     .eq("id", id)
     .select("id, username, email, role, created_at")
     .single();
+
+  if (error && (error.message.toLowerCase().includes("row-level security") || error.message.toLowerCase().includes("coerce"))) {
+    const response = await fetch('/api/admin/update-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id,
+        userData: updatePayload,
+      }),
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    const payload = contentType.includes('application/json')
+      ? await response.json()
+      : { success: false, error: await response.text() };
+
+    if (!response.ok || !payload.success) {
+      const fallbackMessage = payload?.error || error.message;
+      console.error("Error updating user via fallback API:", fallbackMessage);
+      throw new Error(fallbackMessage);
+    }
+
+    data = payload.user;
+    error = null;
+  }
 
   if (error) {
     console.error("Error updating user:", error.message);
@@ -113,7 +164,6 @@ export async function updateUser(id: number, userData: Partial<UserData>) {
   if (data?.id) {
     try {
       await logActivity({
-        user_id: data.id,
         activity_type: "user_updated",
         description: `User ${data.username} updated by admin`,
       });
@@ -137,7 +187,28 @@ export async function deleteUser(id: number) {
     .eq("id", id)
     .single();
 
-  const { error } = await supabase.from("users").delete().eq("id", id);
+  let { error } = await supabase.from("users").delete().eq("id", id);
+
+  if (error && error.message.toLowerCase().includes("row-level security")) {
+    const response = await fetch('/api/admin/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    const payload = contentType.includes('application/json')
+      ? await response.json()
+      : { success: false, error: await response.text() };
+
+    if (!response.ok || !payload.success) {
+      const fallbackMessage = payload?.error || error.message;
+      console.error("Error deleting user via fallback API:", fallbackMessage);
+      throw new Error(fallbackMessage);
+    }
+
+    error = null;
+  }
 
   if (error) {
     console.error("Error deleting user:", error.message);
@@ -148,7 +219,6 @@ export async function deleteUser(id: number) {
     try {
       // Log deletion activity (with no user_id or a system marker if needed)
       await logActivity({
-        user_id: id,
         activity_type: "user_deleted",
         description: `User ${user.username} (ID: ${id}) was deleted`,
       });

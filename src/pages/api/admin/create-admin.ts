@@ -2,12 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import { hashPassword } from '@/src/lib/supabase/hash';
 
-// Use service role key for admin insert (bypasses RLS)
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
+// type definitions for Request/Response
 type RequestBody = {
     username: string;
     email: string;
@@ -28,6 +23,21 @@ export default async function handler(
     if (req.method !== 'POST') {
         return res.status(405).json({ success: false, error: 'Method not allowed' });
     }
+
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !serviceKey) {
+        return res.status(500).json({
+            success: false,
+            error: 'Missing Supabase server environment variables.',
+        });
+    }
+
+    // Use service role key for admin insert (bypasses RLS)
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        serviceKey
+    );
 
     const { username, email, password } = req.body as RequestBody;
 

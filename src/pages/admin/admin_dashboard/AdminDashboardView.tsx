@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { AdminLayout } from '../../../components/AdminLayout';
 import { Users, Activity, AlertTriangle, CheckCircle, Loader2, Clock } from 'lucide-react';
 import { getDashboardStats, getRecentDashboardActivities, DashboardStats } from '@/src/services/dashboard_service';
@@ -34,7 +35,7 @@ export default function AdminDashboard() {
     }, []);
 
     const statCards = [
-        { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+        { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
         { label: 'Active Scans Today', value: stats.activeScansToday, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
         { label: 'Successful Logins', value: stats.successfulLoginsToday, icon: CheckCircle, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
         { label: 'Failed Attempts', value: stats.failedAttemptsToday, icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-500/10' },
@@ -54,13 +55,27 @@ export default function AdminDashboard() {
         <AdminLayout currentIndex={0}>
             <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <header className="flex justify-between items-end border-b border-white/10 pb-6">
-                    <div>
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-                            Dashboard Overview
-                        </h1>
-                        <p className="text-zinc-400 mt-2">Welcome back! Here's what's happening today.</p>
+                    <div className="flex items-center gap-5">
+                        <div className="relative w-16 h-16 shrink-0">
+                            <Image
+                                src="/assets/logo.png"
+                                alt="AttendQR Logo"
+                                fill
+                                sizes="64px"
+                                className="object-contain rounded-2xl shadow-xl shadow-emerald-500/10"
+                            />
+                        </div>
+                        <div>
+                            <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent leading-tight">
+                                Dashboard Overview
+                            </h1>
+                            <p className="text-zinc-400 mt-1 flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                Welcome back! Here's what's happening today.
+                            </p>
+                        </div>
                     </div>
-                    <button 
+                    <button
                         onClick={fetchData}
                         className="p-2 hover:bg-white/5 rounded-xl text-zinc-400 hover:text-white transition-all"
                         title="Refresh data"
@@ -120,12 +135,11 @@ export default function AdminDashboard() {
                                 ))
                             ) : activities.length > 0 ? (
                                 activities.map((activity) => (
-                                    <div key={activity.id} className="flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors group">
-                                        <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${
-                                            activity.activity_type.includes('failed') || activity.activity_type.includes('error') || activity.activity_type.includes('delete')
-                                            ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]' 
+                                    <div key={activity.report_id} className="flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors group">
+                                        <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${activity.activity_type.includes('failed') || activity.activity_type.includes('error') || activity.activity_type.includes('delete')
+                                            ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]'
                                             : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]'
-                                        }`} />
+                                            }`} />
                                         <div>
                                             <p className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">
                                                 {activity.description}

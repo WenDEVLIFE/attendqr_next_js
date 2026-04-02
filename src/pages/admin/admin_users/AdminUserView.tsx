@@ -6,6 +6,7 @@ import { getUsers, UserData } from '@/src/services/user_service';
 import { AddUserModal } from '@/src/components/AddUserModal';
 import { EditUserModal } from '@/src/components/EditUserModal';
 import { DeleteUserModal } from '@/src/components/DeleteUserModal';
+import { ToastContainer } from '@/src/components/Toast';
 
 interface UserActionsMenuProps {
     user: UserData;
@@ -65,7 +66,7 @@ function UserActionsMenu({ user, isOpen, onToggle, onEdit, onDelete }: UserActio
                 <button
                     type="button"
                     onClick={() => onEdit(user)}
-                    className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-blue-500/20 text-zinc-300 hover:text-blue-400 transition-colors border-b border-white/5 text-sm"
+                    className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-emerald-500/20 text-zinc-300 hover:text-emerald-400 transition-colors border-b border-white/5 text-sm"
                 >
                     <Edit2 className="w-4 h-4" />
                     Edit User
@@ -112,6 +113,10 @@ export default function AdminUsers() {
     // Selection state
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
     const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+    
+    // Toast state
+    const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error'; message: string }>>([]);
+    const toastIdRef = useRef(0);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -123,6 +128,15 @@ export default function AdminUsers() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        const id = `toast-${toastIdRef.current++}`;
+        setToasts((prev) => [...prev, { id, type, message }]);
+    };
+
+    const dismissToast = (id: string) => {
+        setToasts((prev) => prev.filter((toast) => toast.id !== id));
     };
 
     useEffect(() => {
@@ -161,7 +175,7 @@ export default function AdminUsers() {
             <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-white/10 pb-6">
                     <div>
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                        <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
                             User Management
                         </h1>
                         <p className="text-zinc-400 mt-2">Manage all registered users in the system.</p>
@@ -170,18 +184,18 @@ export default function AdminUsers() {
                     {/* Actions */}
                     <div className="flex items-center gap-4 w-full md:w-auto">
                         <div className="relative w-full md:w-64 group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-400 transition-colors" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-emerald-400 transition-colors" />
                             <input
                                 type="text"
                                 placeholder="Search users..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm focus:bg-white/10 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-zinc-500"
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl pl-11 pr-4 py-3 outline-none text-sm focus:bg-white/10 focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/20 transition-all placeholder:text-zinc-500"
                             />
                         </div>
                         <button 
                             onClick={() => setIsAddModalOpen(true)}
-                            className="whitespace-nowrap bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-2xl font-semibold text-sm transition-colors shadow-lg shadow-blue-500/20 flex items-center gap-2"
+                            className="whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-2xl font-semibold text-sm transition-colors shadow-lg shadow-emerald-500/20 flex items-center gap-2"
                         >
                             <UserPlus className="w-4 h-4" />
                             Add User
@@ -207,7 +221,7 @@ export default function AdminUsers() {
                                     <tr>
                                         <td colSpan={5} className="px-6 py-20 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                                                <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
                                                 <p className="text-zinc-500 text-sm">Fetching users...</p>
                                             </div>
                                         </td>
@@ -216,7 +230,7 @@ export default function AdminUsers() {
                                     <tr key={user.id} className="hover:bg-white/5 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center text-blue-400 font-bold text-sm border border-blue-500/20 uppercase">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center text-emerald-400 font-bold text-sm border border-emerald-500/20 uppercase">
                                                     {user.username.charAt(0)}
                                                 </div>
                                                 <div>
@@ -264,7 +278,10 @@ export default function AdminUsers() {
             <AddUserModal 
                 isOpen={isAddModalOpen}
                 onClose={() => setIsAddModalOpen(false)}
-                onUserAdded={fetchUsers}
+                onUserAdded={() => {
+                    showToast('✓ User added successfully!', 'success');
+                    fetchUsers();
+                }}
             />
             
             <EditUserModal
@@ -273,7 +290,10 @@ export default function AdminUsers() {
                     setIsEditModalOpen(false);
                     setSelectedUser(null);
                 }}
-                onUserUpdated={fetchUsers}
+                onUserUpdated={() => {
+                    showToast('✓ User updated successfully!', 'success');
+                    fetchUsers();
+                }}
                 user={selectedUser}
             />
 
@@ -283,8 +303,21 @@ export default function AdminUsers() {
                     setIsDeleteModalOpen(false);
                     setSelectedUser(null);
                 }}
-                onUserDeleted={fetchUsers}
+                onUserDeleted={() => {
+                    showToast('✓ User deleted successfully!', 'success');
+                    fetchUsers();
+                }}
                 user={selectedUser}
+            />
+
+            {/* Toast Container */}
+            <ToastContainer
+                toasts={toasts.map((toast) => ({
+                    ...toast,
+                    duration: 3000,
+                    onDismiss: dismissToast,
+                }))}
+                onDismiss={dismissToast}
             />
         </AdminLayout>
     );

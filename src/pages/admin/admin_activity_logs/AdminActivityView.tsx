@@ -13,6 +13,7 @@ export default function AdminActivityLogs() {
         setIsLoading(true);
         try {
             const data = await getRecentActivitiesWithUsers(50);
+            console.log('Fetched activities:', data);
             setLogs(data || []);
         } catch (error) {
             console.error('Activity Logs: Error fetching logs:', error);
@@ -24,25 +25,20 @@ export default function AdminActivityLogs() {
     useEffect(() => {
         fetchLogs();
 
-        // Real-time subscription
+        // Real-time subscription to activity_logs table
         const channel = supabase
-            .channel('realtime:activities')
+            .channel('realtime:activity_logs')
             .on(
                 'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'activities' },
-                async (payload) => {
+                { event: 'INSERT', schema: 'public', table: 'activity_logs' },
+                (payload) => {
                     console.log('New activity received:', payload);
 
-                    // Fetch user info for the new activity (since joined data isn't in payload)
-                    const { data: user } = await supabase
-                        .from('users')
-                        .select('username')
-                        .eq('id', payload.new.user_id)
-                        .single();
-
                     const newLog = {
-                        ...payload.new,
-                        users: user || { username: 'Unknown' }
+                        report_id: payload.new.report_id,
+                        activity_type: payload.new.activity_type,
+                        description: payload.new.description,
+                        created_at: payload.new.created_at
                     };
 
                     setLogs(prev => [newLog, ...prev.slice(0, 49)]);
@@ -63,7 +59,7 @@ export default function AdminActivityLogs() {
             case 'login_unauthorized':
                 return { icon: <ShieldAlert className="w-4 h-4 text-rose-400" />, label: 'security', status: 'error' };
             case 'user_created':
-                return { icon: <UserPlus className="w-4 h-4 text-blue-400" />, label: 'system', status: 'info' };
+                return { icon: <UserPlus className="w-4 h-4 text-emerald-400" />, label: 'system', status: 'info' };
             case 'user_updated':
                 return { icon: <Edit3 className="w-4 h-4 text-amber-400" />, label: 'system', status: 'warning' };
             case 'user_deleted':
@@ -74,10 +70,8 @@ export default function AdminActivityLogs() {
     };
 
     const filteredLogs = logs.filter(log => {
-        const username = log.users?.username || 'Unknown';
         const search = searchTerm.toLowerCase();
         return (
-            username.toLowerCase().includes(search) ||
             log.description.toLowerCase().includes(search) ||
             log.activity_type.toLowerCase().includes(search)
         );
@@ -129,7 +123,6 @@ export default function AdminActivityLogs() {
                             <thead>
                                 <tr className="border-b border-white/10 bg-white/5 text-xs uppercase tracking-wider text-zinc-400 font-semibold">
                                     <th className="px-6 py-4">Event</th>
-                                    <th className="px-6 py-4">User</th>
                                     <th className="px-6 py-4 hidden lg:table-cell">Action</th>
                                     <th className="px-6 py-4 hidden sm:table-cell">Timestamp</th>
                                     <th className="px-6 py-4 text-right">Status</th>
@@ -138,7 +131,7 @@ export default function AdminActivityLogs() {
                             <tbody className="divide-y divide-white/5">
                                 {isLoading ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-20 text-center">
+                                        <td colSpan={4} className="px-6 py-20 text-center">
                                             <div className="flex flex-col items-center gap-3">
                                                 <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
                                                 <p className="text-zinc-500 text-sm">Fetching live logs...</p>
@@ -149,7 +142,7 @@ export default function AdminActivityLogs() {
                                     const { icon, label, status } = getLogUIConfig(log.activity_type);
                                     const { time, date } = formatTimestamp(log.created_at);
                                     return (
-                                        <tr key={log.id} className="hover:bg-white/5 transition-colors group">
+                                        <tr key={log.report_id} className="hover:bg-white/5 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="p-2 rounded-xl bg-white/5 border border-white/10">
@@ -157,9 +150,6 @@ export default function AdminActivityLogs() {
                                                     </div>
                                                     <span className="text-sm font-medium text-white/80 capitalize">{label}</span>
                                                 </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className="text-sm text-zinc-300 font-medium">{log.users?.username || 'Unknown'}</span>
                                             </td>
                                             <td className="px-6 py-4 hidden lg:table-cell">
                                                 <span className="text-sm text-zinc-400 leading-relaxed">{log.description}</span>
@@ -177,7 +167,7 @@ export default function AdminActivityLogs() {
                                                         ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
                                                         : status === 'warning'
                                                             ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.2)]'
-                                                            : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                                                            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                                                     }`}>
                                                     {status}
                                                 </span>
@@ -187,7 +177,7 @@ export default function AdminActivityLogs() {
                                 })}
                                 {!isLoading && filteredLogs.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-zinc-500">
+                                        <td colSpan={4} className="px-6 py-12 text-center text-zinc-500">
                                             {searchTerm ? `No logs found matching "${searchTerm}"` : 'No activities recorded yet.'}
                                         </td>
                                     </tr>
