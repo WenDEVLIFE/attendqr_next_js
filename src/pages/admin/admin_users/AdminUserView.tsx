@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { AdminLayout } from '../../../components/AdminLayout';
 import { Search, MoreVertical, Edit2, Trash2, Loader2, UserPlus } from 'lucide-react';
 import { getUsers, UserData } from '@/src/services/user_service';
@@ -18,6 +18,8 @@ export default function AdminUsers() {
     
     // Selection state
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -34,6 +36,34 @@ export default function AdminUsers() {
     useEffect(() => {
         fetchUsers();
     }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setOpenMenuId(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleMenuClick = (userId: number | undefined) => {
+        if (!userId) return;
+        setOpenMenuId(openMenuId === userId ? null : userId);
+    };
+
+    const handleMenuEdit = (user: UserData) => {
+        setSelectedUser(user);
+        setIsEditModalOpen(true);
+        setOpenMenuId(null);
+    };
+
+    const handleMenuDelete = (user: UserData) => {
+        setSelectedUser(user);
+        setIsDeleteModalOpen(true);
+        setOpenMenuId(null);
+    };
 
     const filteredUsers = users.filter(user =>
         user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -136,22 +166,33 @@ export default function AdminUsers() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                            <div className="relative" ref={menuRef}>
                                                 <button
-                                                    onClick={() => handleEditClick(user)}
-                                                    className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-blue-400 transition-colors"
+                                                    onClick={() => handleMenuClick(user.id)}
+                                                    className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors"
                                                 >
-                                                    <Edit2 className="w-4 h-4" />
-                                                </button>
-                                                <button 
-                                                    onClick={() => handleDeleteClick(user)}
-                                                    className="p-2 hover:bg-rose-500/20 rounded-lg text-zinc-400 hover:text-rose-400 transition-colors"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                                <button className="p-2 hover:bg-white/10 rounded-lg text-zinc-400 hover:text-white transition-colors">
                                                     <MoreVertical className="w-4 h-4" />
                                                 </button>
+
+                                                {/* Dropdown Menu */}
+                                                {openMenuId === user.id && (
+                                                    <div className="absolute right-0 mt-1 w-40 bg-[#1a1a1a] border border-white/10 rounded-lg shadow-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-200">
+                                                        <button
+                                                            onClick={() => handleMenuEdit(user)}
+                                                            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-blue-500/20 text-zinc-300 hover:text-blue-400 transition-colors border-b border-white/5 text-sm"
+                                                        >
+                                                            <Edit2 className="w-4 h-4" />
+                                                            Edit User
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleMenuDelete(user)}
+                                                            className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-rose-500/20 text-zinc-300 hover:text-rose-400 transition-colors text-sm"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                            Delete User
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
