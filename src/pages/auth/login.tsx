@@ -1,17 +1,25 @@
-'use client';
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import router from 'next/router';
+import { useRouter } from 'next/router';
 import { supabase } from '@/src/lib/supabase/client';
 import { verifyPassword } from '@/src/lib/supabase/hash';
+import { useAuth, AdminUser } from '@/src/hooks/useAuth';
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { login, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+    const router = useRouter();
+
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (!isAuthLoading && isAuthenticated) {
+            router.push('/admin/admin_dashboard');
+        }
+    }, [isAuthLoading, isAuthenticated, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,29 +38,21 @@ export default function AdminLoginPage() {
 
             if (dbError || !user) {
                 console.error('[login] User lookup failed or not found:');
-                if (dbError) console.error('[login] Database error:', dbError);
-                if (!user) console.error('[login] No user matches this email:', email.trim().toLowerCase());
-
                 setError('Invalid email or password.');
                 setIsLoading(false);
                 return;
             }
 
-            console.log('[login] User found:', { id: user.id, email: user.email, role: user.role });
-            console.log('[login] Stored password string (prefix):', user.password ? user.password.substring(0, 10) + '...' : 'null');
-
             // 2. Verify password against stored bcrypt hash
             let passwordMatch = await verifyPassword(password, user.password);
-            console.log('[login] Bcrypt match result:', passwordMatch);
 
-            // Fallback: If bcrypt fails, check if it's stored plain (e.g. if trigger wasn't run yet)
+            // Fallback: If bcrypt fails, check if it's stored plain
             if (!passwordMatch && password === user.password) {
                 console.warn('[login] Plain-text password fallback used!');
                 passwordMatch = true;
             }
 
             if (!passwordMatch) {
-                console.error('[login] Password verification failed.');
                 setError('Invalid email or password.');
                 setIsLoading(false);
                 return;
@@ -60,7 +60,6 @@ export default function AdminLoginPage() {
 
             // 3. Check the user has admin role
             if (user.role !== 'admin') {
-                console.error('[login] Role mismatch. Expected admin, got:', user.role);
                 setError('Access denied. You do not have admin privileges.');
                 setIsLoading(false);
                 return;
@@ -68,21 +67,28 @@ export default function AdminLoginPage() {
 
             console.log('[login] Login successful! Redirecting...');
 
-            // 4. Store session info and redirect
-            localStorage.setItem('admin_user', JSON.stringify({
+            // 4. Use central login function from useAuth hook
+            login({
                 id: user.id,
                 username: user.username,
                 email: user.email,
                 role: user.role,
-            }));
-
-            router.push('/admin/admin_dashboard');
+            });
         } catch (err) {
             console.error('[login] Unexpected error:', err);
             setError('An unexpected error occurred. Please try again.');
             setIsLoading(false);
         }
     };
+
+    // Don't show the login form while we're checking for an existing session
+    if (isAuthLoading || isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center">
+                <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+            </div>
+        );
+    }
 
     return (
         <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-black text-white font-sans">
