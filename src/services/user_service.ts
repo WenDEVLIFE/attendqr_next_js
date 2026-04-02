@@ -1,5 +1,5 @@
 import { supabase } from "@/src/lib/supabase/client";
-import { logActivity } from "./activity.service";
+import { logActivity } from "./activity_service";
 
 export interface UserData {
   id?: number;
